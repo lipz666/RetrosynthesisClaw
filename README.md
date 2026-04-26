@@ -88,6 +88,39 @@ flowchart TD
 
 ### Installation Method
 
+#### Option 1: Using Conda Environment (Recommended)
+
+1. **Clone the project**
+
+```bash
+git clone https://github.com/lipz666/RetrosynthesisClaw.git
+cd RetrosynthesisClaw
+```
+
+2. **Create conda environment**
+
+```bash
+conda env create -f environment.yml
+conda activate retrosyn_test
+```
+
+3. **Install the project**
+
+```bash
+pip install -e .
+```
+
+4. **Configure API key**
+
+Copy the `.env.example` file and rename it to `.env`, then fill in your API key:
+
+```
+# .env file content
+MODEL_API_KEY=your_api_key_here
+```
+
+#### Option 2: Using pip
+
 1. **Clone the project**
 
 ```bash
@@ -107,7 +140,7 @@ Copy the `.env.example` file and rename it to `.env`, then fill in your API key:
 
 ```
 # .env file content
-GEMINI_API_KEY=your_api_key_here
+MODEL_API_KEY=your_api_key_here
 ```
 
 ## Configuration Method
