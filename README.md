@@ -298,6 +298,46 @@ This project is licensed under the MIT License. See the `LICENSE` file for detai
 
 ## Technical Support
 
+## Model Files
+
+This project requires model files for the Yield Prediction and SMILES Repair components. Due to file size limitations, models are hosted on GitHub Releases.
+
+### Download Instructions
+
+1. Go to the [Latest Release](https://github.com/lipz666/RetrosynthesisClaw/releases/latest)
+2. Download the following files:
+   - **`models.zip`** - Yield Prediction Models
+   - **`final_model.zip`** - SMILES Repair Model
+
+### Installation Steps
+
+1. Download both zip files from the release page
+2. Extract to the appropriate directories:
+   - **`models.zip`** → Extract to `public/Yieldpredict/` (will create `models/` subdirectory)
+   - **`final_model.zip`** → Extract to `smiles/smiles/runs/chemberta2_repair/` (will create `final_model/` subdirectory)
+
+3. Verify the extracted file structure:
+   ```
+   public/Yieldpredict/models/
+   ├── residual_quantile_ydr_artifact.json
+   ├── residual_quantile_ydr_rf.zip
+   └── other model files
+   
+   smiles/smiles/runs/chemberta2_repair/final_model/
+   ├── model.safetensors
+   ├── tokenizer.json
+   ├── vocab.json
+   └── other config files
+   ```
+
+### Testing
+
+To verify the installation, test with the molecule:
+- **SMILES**: `BrC1=C2CCCOC2=NC=C1`
+- **Expected**: System should generate synthesis routes successfully
+
+Start the servers and access `http://localhost:8000` to use the frontend interface.
+
 - **Documentation**: Check the documentation in the `docs/` directory
 - **Examples**: Check the example scripts in the `examples/` directory
 - **Issues**: Ask questions in GitHub Issues
