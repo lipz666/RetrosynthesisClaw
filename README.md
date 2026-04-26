@@ -91,7 +91,7 @@ flowchart TD
 1. **Clone the project**
 
 ```bash
-git clone https://github.com/yourusername/RetrosynthesisClaw.git
+git clone https://github.com/lipz666/RetrosynthesisClaw.git
 cd RetrosynthesisClaw
 ```
 
