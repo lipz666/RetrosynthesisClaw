@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RetrosynthesisClaw — Synthesis Planner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- ── Navbar ─────────────────────────────────────────── -->
+  <header class="navbar">
+    <div class="navbar-inner">
+      <div class="navbar-brand">
+        <svg class="brand-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="16" cy="8"  r="4" fill="#1A56DB"/>
+          <circle cx="6"  cy="24" r="4" fill="#1A56DB"/>
+          <circle cx="26" cy="24" r="4" fill="#1A56DB"/>
+          <line x1="16" y1="12" x2="6"  y2="20" stroke="#1A56DB" stroke-width="2"/>
+          <line x1="16" y1="12" x2="26" y2="20" stroke="#1A56DB" stroke-width="2"/>
+          <line x1="6"  y1="24" x2="26" y2="24" stroke="#1A56DB" stroke-width="2"/>
+        </svg>
+        <div>
+          <div class="brand-name">RetrosynthesisClaw</div>
+          <div class="brand-sub">AI-Powered Synthesis Planner</div>
+        </div>
+      </div>
+
+      <div class="navbar-right">
+        <div id="apiStatus" class="api-pill">
+          <span class="api-dot" id="apiDot"></span>
+          <span id="apiText">Connecting…</span>
+        </div>
+        <a href="agent-monitor.html" class="nav-link">Monitor</a>
+        <a href="/frontend/api-config.html" class="nav-link">API Config</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Main Layout ─────────────────────────────────────── -->
+  <main class="syn-layout">
+
+    <!-- LEFT: Input panel -->
+    <aside class="input-panel">
+
+      <!-- Molecule Editor -->
+      <section class="panel-card">
+        <div class="panel-card-header">
+          <span class="panel-card-title">
+            <svg class="icon" viewBox="0 0 16 16"><path fill="currentColor" d="M2 2h12v12H2z" fill-opacity=".12"/><rect x="2" y="2" width="12" height="12" rx="1" stroke="currentColor" stroke-width="1.4" fill="none"/><path d="M5 8h6M8 5v6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            分子编辑器
+          </span>
+          <div class="header-actions">
+            <button id="refreshKetcherBtn" class="btn-sm btn-ghost">↺ 刷新</button>
+            <button id="syncFromCanvasBtn" class="btn-sm btn-outline">← 同步结构</button>
+          </div>
+        </div>
+        <div id="ketcherNotice" class="notice notice-warn hidden"></div>
+        <div class="ketcher-wrap">
+          <iframe id="ketcherFrame" class="ketcher-iframe" title="Ketcher" src="/standalone/index.html"></iframe>
+        </div>
+      </section>
+
+      <!-- Molecule Properties -->
+      <section class="panel-card">
+        <div class="panel-card-header">
+          <span class="panel-card-title">
+            <svg class="icon" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.4" fill="none"/><path d="M8 5v3.5l2 1.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            分子信息
+          </span>
+        </div>
+        <div class="panel-card-body">
+
+          <div class="prop-grid">
+            <div class="prop-item">
+              <div class="prop-label">Canonical SMILES</div>
+              <div id="smilesOutput" class="prop-value mono">—</div>
+            </div>
+            <div class="prop-item">
+              <div class="prop-label">IUPAC Name</div>
+              <div id="iupacOutput" class="prop-value">—</div>
+            </div>
+            <div class="prop-item">
+              <div class="prop-label">分子式</div>
+              <div id="formulaOutput" class="prop-value mono">—</div>
+            </div>
+            <div class="prop-item">
+              <div class="prop-label">分子量</div>
+              <div id="weightOutput" class="prop-value">—</div>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">导入 SMILES / 化合物名称</label>
+            <div class="input-row">
+              <input id="smilesInput" class="text-input" type="text" placeholder="例：CC(=O)Oc1ccccc1C(=O)O">
+              <button id="loadSmilesBtn" class="btn-sm btn-primary">导入</button>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">目标分子 SMILES</label>
+            <input id="target" class="text-input" type="text" placeholder="从画布同步或直接粘贴 SMILES">
+          </div>
+
+          <div class="btn-row">
+            <button id="copySmilesBtn" class="btn-sm btn-ghost">复制 SMILES</button>
+            <button id="exportStructureBtn" class="btn-sm btn-ghost">导出</button>
+            <button id="sendToRetroBtn" class="btn-sm btn-outline">→ 规划路线</button>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- Analysis Control -->
+      <section class="panel-card">
+        <div class="panel-card-header">
+          <span class="panel-card-title">
+            <svg class="icon" viewBox="0 0 16 16"><path d="M3 8h10M10 5l3 3-3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+            合成规划
+          </span>
+        </div>
+        <div class="panel-card-body">
+
+          <div class="control-row">
+            <div class="field-group" style="flex:1">
+              <label class="field-label">路线数量</label>
+              <select id="topK" class="select-input">
+                <option value="1">1 条路线</option>
+                <option value="3" selected>3 条路线</option>
+                <option value="5">5 条路线</option>
+              </select>
+            </div>
+            <div class="field-group" style="flex:1">
+              <label class="field-label">选项</label>
+              <label class="toggle-label">
+                <input type="checkbox" id="reasoningToggle" class="toggle-input">
+                <span>显示推理过程</span>
+              </label>
+            </div>
+          </div>
+
+          <button id="submitBtn" class="btn-primary btn-full">
+            <svg class="icon" viewBox="0 0 16 16"><polygon points="4,2 14,8 4,14" fill="currentColor"/></svg>
+            开始分析
+          </button>
+          <input type="checkbox" id="debug" style="display:none">
+
+          <!-- Progress -->
+          <div id="progressPanel" class="progress-panel hidden">
+            <div class="progress-header">
+              <span class="progress-label">生成进度</span>
+              <span id="progressMeta" class="progress-meta">等待中…</span>
+            </div>
+            <div class="progress-track">
+              <div id="progressBar" class="progress-fill" style="width:0%"></div>
+            </div>
+            <div id="progressLog" class="progress-log"></div>
+          </div>
+
+          <!-- Loading -->
+          <div id="loading" class="loading-state hidden">
+            <div class="spinner"></div>
+            <span>正在生成合成路线…</span>
+          </div>
+
+          <!-- Error -->
+          <div id="error" class="error-banner hidden">
+            <svg class="icon" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.4" fill="none"/><path d="M8 5v3M8 10.5v.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            <span id="errorMessage"></span>
+          </div>
+
+        </div>
+      </section>
+
+    </aside>
+
+    <!-- RIGHT: Results panel -->
+    <section class="results-panel">
+
+      <!-- Reasoning panel -->
+      <div id="reasoningPanel" class="reasoning-card hidden">
+        <div class="reasoning-header">
+          <span class="reasoning-title">
+            <svg class="icon" viewBox="0 0 16 16"><path d="M2 4h12M2 8h8M2 12h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            模型推理过程
+          </span>
+          <button id="copyReasoningBtn" class="btn-sm btn-ghost">复制</button>
+        </div>
+        <div id="reasoningContent" class="reasoning-body"></div>
+      </div>
+
+      <!-- Routes -->
+      <div id="results" class="hidden">
+        <div class="results-header">
+          <div class="results-title-row">
+            <h2 class="results-title">合成路线</h2>
+            <div class="results-actions">
+              <button id="copyBtn"   class="btn-sm btn-ghost">复制 JSON</button>
+              <button id="exportBtn" class="btn-sm btn-ghost">导出</button>
+            </div>
+          </div>
+          <!-- Route tabs -->
+          <div id="routeTabs" class="route-tabs"></div>
+        </div>
+
+        <!-- Active route pathway -->
+        <div id="routesContainer" class="pathway-container"></div>
+      </div>
+
+      <!-- Empty state -->
+      <div id="emptyState" class="empty-state">
+        <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" class="empty-icon">
+          <circle cx="40" cy="22" r="8"  stroke="#CBD5E1" stroke-width="2.5"/>
+          <circle cx="16" cy="60" r="8"  stroke="#CBD5E1" stroke-width="2.5"/>
+          <circle cx="64" cy="60" r="8"  stroke="#CBD5E1" stroke-width="2.5"/>
+          <line x1="40" y1="30" x2="16" y2="52" stroke="#CBD5E1" stroke-width="2"/>
+          <line x1="40" y1="30" x2="64" y2="52" stroke="#CBD5E1" stroke-width="2"/>
+          <line x1="16" y1="60" x2="64" y2="60" stroke="#CBD5E1" stroke-width="2"/>
+        </svg>
+        <p class="empty-title">输入目标分子，开始规划</p>
+        <p class="empty-sub">在左侧绘制或粘贴 SMILES，点击「开始分析」</p>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Toast -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>

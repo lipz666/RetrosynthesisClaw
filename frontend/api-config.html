@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Configuration // RetrosynthesisClaw</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script>
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+    <style>
+        .api-config-grid { display: grid; gap: 1rem; }
+        @media (min-width: 1180px) { .api-config-grid { grid-template-columns: 1.02fr .98fr; } }
+        .form-section, .preview-card, .response-display, .auth-section, .tab, .connection-indicator, .mini-terminal {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+        }
+        .form-section { overflow: hidden; }
+        .form-section-header { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:.95rem 1rem; border-bottom:1px solid var(--border); background: var(--surface-2); }
+        .form-section-title { display:flex; align-items:center; gap:.55rem; font-family: var(--font-heading); letter-spacing:.12em; text-transform:uppercase; font-size:.82rem; color: var(--text-primary); }
+        .form-section-body { padding: 1rem; }
+        .form-group { margin-bottom: 1rem; }
+        .form-label { display:block; margin-bottom:.45rem; font-family: var(--font-label); text-transform:uppercase; letter-spacing:.14em; font-size:.64rem; color: var(--text-muted); }
+        .form-input, .form-select, textarea.form-input { width:100%; min-height:42px; padding:.72rem .9rem; background: var(--surface); color: var(--text-primary); border:1px solid var(--border-2); border-radius: var(--radius); outline:none; transition: all var(--transition); }
+        .form-input:focus, .form-select:focus, textarea.form-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(59,130,246,.12); }
+        .form-select { appearance:none; padding-right:2.2rem; }
+        .key-value-pair, .param-row { display:grid; gap:.6rem; align-items:end; }
+        .key-value-pair { grid-template-columns: 1fr 1fr auto; margin-bottom:.65rem; }
+        .param-row { grid-template-columns: 1fr 1fr .7fr auto; margin-bottom:.65rem; }
+        @media (max-width: 768px) { .key-value-pair, .param-row { grid-template-columns:1fr; } }
+        .btn-icon { width: 42px; height: 42px; display:grid; place-items:center; border:1px solid var(--border-2); background: var(--surface-2); color: var(--text-secondary); cursor:pointer; border-radius: var(--radius); transition: all var(--transition); }
+        .btn-icon:hover { border-color: var(--blue); color: var(--blue); }
+        .auth-section { padding: 1rem; margin-bottom: 1rem; }
+        .auth-section.active { border-color: var(--blue-mid); }
+        .response-display { padding: 1rem; margin-top:1rem; max-height: 360px; overflow:auto; font-family: var(--font-mono); font-size:.74rem; line-height:1.55; color: var(--text-secondary); }
+        .tab-container { display:flex; gap:.4rem; margin-bottom:1rem; flex-wrap: wrap; }
+        .tab { padding:.65rem .9rem; cursor:pointer; color: var(--text-secondary); font-family: var(--font-label); text-transform: uppercase; letter-spacing: .12em; font-size:.64rem; }
+        .tab.active { color: var(--blue); border-color: rgba(59,130,246,.35); box-shadow: 0 0 0 3px rgba(59,130,246,.08); }
+        .tab-content { display:none; }
+        .tab-content.active { display:block; }
+        .success-message, .error-message { padding: .85rem .9rem; border: 1px solid; border-radius: var(--radius); margin-bottom: 1rem; font-family: var(--font-label); letter-spacing: .06em; }
+        .success-message { background: var(--green-light); border-color: #86efac; color: var(--green); }
+        .error-message { background: var(--red-light); border-color: #fca5a5; color: var(--red); }
+        .config-hero { margin-bottom: 1.25rem; padding: 1rem 1.1rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); }
+        .config-hero-title { margin: 0 0 .35rem; font-family: var(--font-heading); text-transform: uppercase; letter-spacing: .12em; font-size: clamp(1.4rem, 3vw, 2.4rem); color: var(--text-primary); }
+        .config-hero-subtitle { margin: 0; color: var(--text-secondary); font-size: .86rem; }
+        .config-aside { display:grid; gap:1rem; }
+        .preview-card { padding: 1rem; }
+        .mini-terminal { margin-top: .8rem; padding: .9rem; color: var(--text-secondary); font-family: var(--font-mono); font-size:.72rem; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <nav class="nav-bar">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between gap-4 flex-wrap">
+                <div class="nav-brand">
+                    <div class="nav-logo"><i class="fa fa-flask"></i></div>
+                    <div>
+                        <h1 class="nav-title">RetrosynthesisClaw</h1>
+                        <p class="nav-subtitle">API uplink / config terminal</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3 flex-wrap justify-end">
+                    <div id="apiStatus" class="api-status"><div class="api-status-dot disconnected"></div><span>checking uplink</span></div>
+                    <a href="index.html" class="btn-ghost text-xs">workbench</a>
+                    <button id="themeToggle" class="btn-ghost w-9 h-9" aria-label="toggle theme">
+                        <i class="fa fa-moon-o dark:hidden"></i>
+                        <i class="fa fa-sun-o hidden dark:block"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-6 py-10">
+        <section class="config-hero">
+            <div class="hero-kicker">system / api configuration</div>
+            <h2 class="config-hero-title">API 配置管理台</h2>
+            <p class="config-hero-subtitle">统一到赛博朋克设计语言，支持请求头、认证、参数与测试响应的可视化编辑。</p>
+        </section>
+
+        <div class="flex items-center justify-between mb-6 gap-3 flex-wrap">
+            <h3 class="section-title">参数矩阵</h3>
+            <div class="flex gap-2 flex-wrap">
+                <button id="saveConfigBtn" class="btn-primary"><i class="fa fa-save"></i><span>save config</span></button>
+                <button id="testConfigBtn" class="btn-secondary"><i class="fa fa-play"></i><span>test api</span></button>
+            </div>
+        </div>
+
+        <div class="api-config-grid">
+            <div class="config-aside">
+                <section class="form-section">
+                    <div class="form-section-header"><div class="form-section-title"><i class="fa fa-info-circle"></i><span>基本信息</span></div></div>
+                    <div class="form-section-body">
+                        <div class="form-group"><label class="form-label">API名称</label><input type="text" id="apiName" class="form-input" placeholder="输入API名称"></div>
+                        <div class="form-group"><label class="form-label">请求URL</label><input type="text" id="apiUrl" class="form-input" placeholder="https://api.example.com/endpoint"></div>
+                        <div class="form-group"><label class="form-label">请求方法</label><select id="apiMethod" class="form-select"><option value="GET">GET</option><option value="POST">POST</option><option value="PUT">PUT</option><option value="DELETE">DELETE</option><option value="PATCH">PATCH</option></select></div>
+                    </div>
+                </section>
+
+                <section class="form-section">
+                    <div class="form-section-header"><div class="form-section-title"><i class="fa fa-lock"></i><span>认证方式</span></div></div>
+                    <div class="form-section-body">
+                        <div class="form-group"><label class="form-label">认证类型</label><select id="authType" class="form-select"><option value="none">None</option><option value="basic">Basic Auth</option><option value="bearer">Bearer Token</option><option value="api_key">API Key</option></select></div>
+                        <div id="basicAuthSection" class="auth-section hidden">
+                            <div class="form-group"><label class="form-label">用户名</label><input type="text" id="basicUsername" class="form-input" placeholder="输入用户名"></div>
+                            <div class="form-group mb-0"><label class="form-label">密码</label><input type="password" id="basicPassword" class="form-input" placeholder="输入密码"></div>
+                        </div>
+                        <div id="bearerAuthSection" class="auth-section hidden"><div class="form-group mb-0"><label class="form-label">Token</label><input type="text" id="bearerToken" class="form-input" placeholder="输入Bearer Token"></div></div>
+                        <div id="apiKeyAuthSection" class="auth-section hidden">
+                            <div class="form-group"><label class="form-label">API Key</label><input type="text" id="apiKey" class="form-input" placeholder="输入API Key"></div>
+                            <div class="form-group"><label class="form-label">参数位置</label><select id="apiKeyLocation" class="form-select"><option value="header">Header</option><option value="query">Query</option></select></div>
+                            <div class="form-group mb-0"><label class="form-label">参数名称</label><input type="text" id="apiKeyName" class="form-input" placeholder="输入参数名称"></div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <div class="config-aside">
+                <section class="form-section">
+                    <div class="form-section-header"><div class="form-section-title"><i class="fa fa-header"></i><span>请求头</span></div><button id="addHeaderBtn" class="btn-icon" aria-label="add header"><i class="fa fa-plus"></i></button></div>
+                    <div class="form-section-body"><div id="headersContainer"><div class="key-value-pair"><input type="text" class="form-input" placeholder="键" value="Content-Type"><input type="text" class="form-input" placeholder="值" value="application/json"><button class="btn-icon remove-header"><i class="fa fa-times"></i></button></div></div></div>
+                </section>
+
+                <section class="form-section">
+                    <div class="form-section-header"><div class="form-section-title"><i class="fa fa-sliders"></i><span>请求参数</span></div></div>
+                    <div class="form-section-body">
+                        <div class="tab-container"><div class="tab active" data-tab="query">查询参数</div><div class="tab" data-tab="body">请求体</div></div>
+                        <div id="queryParamsTab" class="tab-content active">
+                            <div id="queryParamsContainer"><div class="param-row"><input type="text" class="form-input" placeholder="参数名"><input type="text" class="form-input" placeholder="参数值"><select class="form-select"><option value="string">String</option><option value="number">Number</option><option value="boolean">Boolean</option></select><button class="btn-icon remove-param"><i class="fa fa-times"></i></button></div></div>
+                            <button id="addQueryParamBtn" class="btn-secondary mt-4"><i class="fa fa-plus"></i><span>add param</span></button>
+                        </div>
+                        <div id="bodyParamsTab" class="tab-content">
+                            <div class="form-group"><label class="form-label">请求体格式</label><select id="bodyFormat" class="form-select"><option value="json">JSON</option><option value="form">Form Data</option><option value="text">Text</option></select></div>
+                            <div class="form-group mb-0"><label class="form-label">请求体内容</label><textarea id="bodyContent" class="form-input" rows="5" placeholder='{"key": "value"}'></textarea></div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <div class="config-aside">
+                <section class="form-section">
+                    <div class="form-section-header"><div class="form-section-title"><i class="fa fa-sign-in"></i><span>响应处理</span></div></div>
+                    <div class="form-section-body">
+                        <div class="form-group"><label class="form-label">预期状态码</label><input type="number" id="expectedStatusCode" class="form-input" placeholder="200" value="200"></div>
+                        <div class="form-group mb-0"><label class="form-label">响应数据格式</label><select id="responseFormat" class="form-select"><option value="json">JSON</option><option value="text">Text</option><option value="xml">XML</option></select></div>
+                    </div>
+                </section>
+
+                <section class="form-section">
+                    <div class="form-section-header"><div class="form-section-title"><i class="fa fa-flask"></i><span>测试结果</span></div></div>
+                    <div class="form-section-body">
+                        <div class="preview-card">
+                            <div class="hud-label">output</div>
+                            <div class="hud-value">response trace</div>
+                            <div id="testResult" class="response-display hidden"></div>
+                            <div id="emptyResultState" class="mini-terminal">暂无测试结果。点击“test api”查看响应头、状态码与响应体。</div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer"><div class="max-w-7xl mx-auto px-6"><p class="footer-text">© 2026 RetrosynthesisClaw · api uplink console</p></div></footer>
+
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script>
+        const API_CONFIG_URL = 'http://127.0.0.1:8000/config/api';
+        const LEGACY_API_CONFIG_URL = 'http://127.0.0.1:8000/api/config';
+        let currentConfig = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initTheme();
+            setupEventListeners();
+            loadSavedConfig();
+        });
+
+        function initTheme() {
+            if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.classList.add('dark');
+            else document.documentElement.classList.remove('dark');
+        }
+
+        function setupEventListeners() {
+            document.getElementById('themeToggle').addEventListener('click', function() {
+                document.documentElement.classList.toggle('dark');
+                localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+            });
+            document.getElementById('authType').addEventListener('change', function() {
+                document.getElementById('basicAuthSection').classList.add('hidden');
+                document.getElementById('bearerAuthSection').classList.add('hidden');
+                document.getElementById('apiKeyAuthSection').classList.add('hidden');
+                if (this.value === 'basic') document.getElementById('basicAuthSection').classList.remove('hidden');
+                else if (this.value === 'bearer') document.getElementById('bearerAuthSection').classList.remove('hidden');
+                else if (this.value === 'api_key') document.getElementById('apiKeyAuthSection').classList.remove('hidden');
+            });
+            document.getElementById('addHeaderBtn').addEventListener('click', function() { addHeaderRow(); });
+            document.getElementById('addQueryParamBtn').addEventListener('click', function() { addParamRow(); });
+            document.querySelectorAll('.tab').forEach(tab => tab.addEventListener('click', function() {
+                const tabName = this.dataset.tab;
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                this.classList.add('active');
+                document.getElementById(`${tabName}ParamsTab`).classList.add('active');
+            }));
+            document.getElementById('saveConfigBtn').addEventListener('click', async function() {
+                await saveConfig(collectConfig());
+                showToast('配置已保存');
+            });
+            document.getElementById('testConfigBtn').addEventListener('click', function() { testAPI(); });
+            initializeRemoveButtons();
+        }
+
+        function addHeaderRow(key = '', value = '') { const c = document.getElementById('headersContainer'); const el = document.createElement('div'); el.className = 'key-value-pair'; el.innerHTML = `<input type="text" class="form-input" placeholder="键" value="${escapeAttr(key)}"><input type="text" class="form-input" placeholder="值" value="${escapeAttr(value)}"><button class="btn-icon remove-header"><i class="fa fa-times"></i></button>`; c.appendChild(el); el.querySelector('.remove-header').addEventListener('click', () => el.remove()); }
+        function addParamRow(name = '', value = '', type = 'string') { const c = document.getElementById('queryParamsContainer'); const el = document.createElement('div'); el.className = 'param-row'; el.innerHTML = `<input type="text" class="form-input" placeholder="参数名" value="${escapeAttr(name)}"><input type="text" class="form-input" placeholder="参数值" value="${escapeAttr(value)}"><select class="form-select"><option value="string" ${type==='string'?'selected':''}>String</option><option value="number" ${type==='number'?'selected':''}>Number</option><option value="boolean" ${type==='boolean'?'selected':''}>Boolean</option></select><button class="btn-icon remove-param"><i class="fa fa-times"></i></button>`; c.appendChild(el); el.querySelector('.remove-param').addEventListener('click', () => el.remove()); }
+        function initializeRemoveButtons() { document.querySelectorAll('.remove-header').forEach(btn => btn.addEventListener('click', function(){ this.closest('.key-value-pair')?.remove(); })); document.querySelectorAll('.remove-param').forEach(btn => btn.addEventListener('click', function(){ this.closest('.param-row')?.remove(); })); }
+        function collectConfig() { const config = { name: apiName.value, url: apiUrl.value, method: apiMethod.value, auth: { type: authType.value }, headers: [], params: { query: [], body: { format: bodyFormat.value, content: bodyContent.value } }, response: { expectedStatusCode: Number(expectedStatusCode.value || 200), format: responseFormat.value } }; if (config.auth.type === 'basic') { config.auth.username = basicUsername.value; config.auth.password = basicPassword.value; } else if (config.auth.type === 'bearer') { config.auth.token = bearerToken.value; } else if (config.auth.type === 'api_key') { config.auth.apiKey = apiKey.value; config.auth.location = apiKeyLocation.value; config.auth.name = apiKeyName.value; } document.querySelectorAll('#headersContainer .key-value-pair').forEach(pair => { const key = pair.querySelector('input:nth-child(1)').value; const value = pair.querySelector('input:nth-child(2)').value; if (key) config.headers.push({ key, value }); }); document.querySelectorAll('#queryParamsContainer .param-row').forEach(row => { const name = row.querySelector('input:nth-child(1)').value; const value = row.querySelector('input:nth-child(2)').value; const type = row.querySelector('select').value; if (name) config.params.query.push({ name, value, type }); }); return config; }
+
+        async function saveConfig(config) {
+            currentConfig = config;
+            localStorage.setItem('apiConfig', JSON.stringify(config));
+            const response = await postConfig(API_CONFIG_URL, config).catch(() => postConfig(LEGACY_API_CONFIG_URL, config));
+            if (!response.ok) {
+                throw new Error(`保存失败: HTTP ${response.status}`);
+            }
+        }
+
+        async function postConfig(url, config) {
+            return fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(config)
+            });
+        }
+
+        async function loadSavedConfig() {
+            const config = await fetchConfig(API_CONFIG_URL).catch(() => fetchConfig(LEGACY_API_CONFIG_URL)).catch(() => null);
+            if (config) {
+                currentConfig = config;
+                localStorage.setItem('apiConfig', JSON.stringify(config));
+                applyConfig(config);
+            } else {
+                const savedConfig = localStorage.getItem('apiConfig');
+                if (savedConfig) {
+                    currentConfig = JSON.parse(savedConfig);
+                    applyConfig(currentConfig);
+                } else {
+                    setDefaultConfig();
+                }
+            }
+        }
+
+        async function fetchConfig(url) {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            return await response.json();
+        }
+
+        function applyConfig(config) { apiName.value = config.name || ''; apiUrl.value = config.url || ''; apiMethod.value = config.method || 'GET'; authType.value = config.auth?.type || 'none'; authType.dispatchEvent(new Event('change')); if (config.auth?.type === 'basic') { basicUsername.value = config.auth.username || ''; basicPassword.value = config.auth.password || ''; } else if (config.auth?.type === 'bearer') { bearerToken.value = config.auth.token || ''; } else if (config.auth?.type === 'api_key') { apiKey.value = config.auth.apiKey || ''; apiKeyLocation.value = config.auth.location || 'header'; apiKeyName.value = config.auth.name || ''; } headersContainer.innerHTML = ''; (config.headers?.length ? config.headers : [{ key: 'Content-Type', value: 'application/json' }]).forEach(h => addHeaderRow(h.key, h.value)); queryParamsContainer.innerHTML = ''; (config.params?.query?.length ? config.params.query : [{ name: '', value: '', type: 'string' }]).forEach(p => addParamRow(p.name, p.value, p.type)); bodyFormat.value = config.params?.body?.format || 'json'; bodyContent.value = config.params?.body?.content || ''; expectedStatusCode.value = config.response?.expectedStatusCode || '200'; responseFormat.value = config.response?.format || 'json'; initializeRemoveButtons(); }
+        function setDefaultConfig() { applyConfig({ name: 'RetrosynthesisClaw API', url: 'http://127.0.0.1:8000/route', method: 'POST', auth: { type: 'none' }, headers: [{ key: 'Content-Type', value: 'application/json' }, { key: 'Accept', value: 'application/json' }], params: { query: [], body: { format: 'json', content: JSON.stringify({ target: 'CCO', top_k: 3, debug: false }, null, 2) } }, response: { expectedStatusCode: 200, format: 'json' } }); }
+        async function testAPI() { const config = collectConfig(); const testResult = document.getElementById('testResult'); const emptyState = document.getElementById('emptyResultState'); if (!config.url) return showToast('请输入API URL', 'error'); testResult.classList.remove('hidden'); emptyState.classList.add('hidden'); testResult.innerHTML = '<div class="flex items-center justify-center py-4"><div class="loading-spinner"></div><span class="ml-2">测试中...</span></div>'; try { const options = { method: config.method, headers: {} }; config.headers.forEach(h => options.headers[h.key] = h.value); if (config.auth.type === 'basic') options.headers['Authorization'] = `Basic ${btoa(`${config.auth.username}:${config.auth.password}`)}`; else if (config.auth.type === 'bearer') options.headers['Authorization'] = `Bearer ${config.auth.token}`; else if (config.auth.type === 'api_key' && config.auth.location === 'header') options.headers[config.auth.name] = config.auth.apiKey; let url = config.url; if (config.params.query.length > 0 || (config.auth.type === 'api_key' && config.auth.location === 'query')) { const params = new URLSearchParams(); config.params.query.forEach(p => params.append(p.name, p.value)); if (config.auth.type === 'api_key' && config.auth.location === 'query') params.append(config.auth.name, config.auth.apiKey); url += (url.includes('?') ? '&' : '?') + params.toString(); } if (config.method !== 'GET' && config.method !== 'DELETE') options.body = config.params.body.content || '{}'; const response = await fetch(url, options); const responseText = await response.text(); const headers = {}; response.headers.forEach((value, key) => headers[key] = value); testResult.innerHTML = `<div class="mb-4"><div class="font-semibold text-sm mb-2">状态码: <span class="${response.ok ? 'text-success' : 'text-error'}">${response.status} ${response.statusText}</span></div></div><div class="mb-4"><div class="font-semibold text-sm mb-2">响应头:</div><pre class="text-xs">${JSON.stringify(headers, null, 2)}</pre></div><div><div class="font-semibold text-sm mb-2">响应体:</div><pre class="text-xs">${escapeHtml(responseText)}</pre></div>`; showToast(`测试完成，状态码: ${response.status}`, response.ok ? 'success' : 'error'); } catch (error) { testResult.innerHTML = `<div class="text-error"><div class="font-semibold mb-2">测试失败:</div><pre class="text-xs">${escapeHtml(error.message)}</pre></div>`; showToast(`测试失败: ${error.message}`, 'error'); } }
+        function showToast(message, type = 'success') { const container = document.getElementById('toastContainer'); if (!container) return; const toast = document.createElement('div'); toast.className = 'toast'; toast.innerHTML = `<div class="toast-icon ${type}"><i class="fa ${type === 'success' ? 'fa-check' : 'fa-exclamation-circle'} text-xs"></i></div><span class="toast-message">${escapeHtml(message)}</span>`; container.appendChild(toast); setTimeout(() => { toast.classList.add('removing'); setTimeout(() => toast.remove(), 300); }, 3000); }
+        function escapeAttr(value) { return String(value ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+        function escapeHtml(value) { return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+    </script>
+</body>
+</html>

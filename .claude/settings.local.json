@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python *)",
+      "Bash(node --check frontend/script.js)",
+      "Bash(python3 *)",
+      "Bash(curl -s -X GET https://api.yuegle.com/v1/models -H 'Authorization: Bearer sk-lZ1aLlzNeE83SAXE28Ec348c17C1475595FaB53966A9404f')",
+      "Bash(curl *)",
+      "Bash(PYTHONPATH=src python -m uvicorn retrosynthesis_claw.api:app --host 0.0.0.0 --port 8000 --reload)",
+      "Bash(echo \"PID: $!\")",
+      "Read(//tmp/**)",
+      "Bash(pkill -f \"uvicorn retrosynthesis_claw\")",
+      "Bash(PYTHONPATH=src python -m uvicorn retrosynthesis_claw.api:app --host 0.0.0.0 --port 8000)",
+      "Bash(netstat -ano)",
+      "Bash(taskkill /PID 19244 /F)",
+      "Bash(cmd *)",
+      "Bash(powershell *)",
+      "Bash(echo \"Exit: $?\")",
+      "Bash(curl -s --max-time 120 -X POST http://localhost:8001/route -H 'Content-Type: application/json' -d '{\"target\": \"BrC1=C2CCCOC2=NC=C1\", \"top_k\": 1, \"debug\": false}')",
+      "Read(//c/Users/lpz/Desktop/**)",
+      "Bash(sed -i '/\"system_prompt\": self.system_prompt/d' /c/Users/lpz/Desktop/RetrosynthesisClaw/src/retrosynthesis_claw/evaluation.py)",
+      "Bash(sed -i 's/\"system_prompt\": self\\\\.system_prompt,\\\\s*//g' /c/Users/lpz/Desktop/RetrosynthesisClaw/src/retrosynthesis_claw/evaluation.py)",
+      "Bash(pip show *)",
+      "Bash(PYTHONPATH=src uvicorn retrosynthesis_claw.api:app --host 0.0.0.0 --port 8000)",
+      "Bash(curl -s -X POST http://localhost:8000/route -H 'Content-Type: application/json' -d '{\"target\": \"BrC1=C2CCCOC2=NC=C1\", \"top_k\": 1}' --max-time 300)",
+      "Bash(echo \"curl PID: $!\")",
+      "Bash(taskkill /F /IM python.exe)",
+      "Bash(echo \"Started background request, PID: $!\")",
+      "Bash(taskkill /F /IM python.exe /T)",
+      "Bash(taskkill /F /IM uvicorn.exe /T)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(kill 1394 1393)",
+      "Bash(conda run *)"
+    ]
+  }
+}

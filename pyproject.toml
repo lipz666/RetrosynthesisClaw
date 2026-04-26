@@ -1,0 +1,40 @@
+[project]
+name = "retrosynthesis-claw"
+version = "0.1.0"
+description = "A modular multi-agent retrosynthesis scaffold for complex organic synthesis planning, powered by large language models"
+requires-python = ">=3.9"
+authors = [
+  { name = "RetrosynthesisClaw Team", email = "contact@retrosynthesisclaw.com" },
+]
+license = { file = "LICENSE" }
+readme = "README.md"
+homepage = "https://github.com/yourusername/RetrosynthesisClaw"
+repository = "https://github.com/yourusername/RetrosynthesisClaw"
+documentation = "https://github.com/yourusername/RetrosynthesisClaw/wiki"
+keywords = ["retrosynthesis", "organic chemistry", "llm", "multi-agent", "synthesis planning"]
+dependencies = [
+  "fastapi>=0.115.0",
+  "uvicorn>=0.30.0",
+  "rdkit>=2023.09.1",
+  "pandas>=2.2.0",
+  "numpy>=1.26.0",
+  "matplotlib>=3.8.0",
+  "torch>=2.2.0",
+  "transformers>=4.41.0",
+  "python-dotenv>=1.0.0",
+  "pydantic>=2.0.0",
+  "pydantic-settings>=2.0.0",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project.scripts]
+retrosynthesis-claw = "retrosynthesis_claw.api:app"
+
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"

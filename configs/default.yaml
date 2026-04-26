@@ -1,0 +1,5 @@
+app:
+  name: RetrosynthesisClaw
+  min_route_steps: 10
+  max_route_steps: 20
+  max_branching_factor: 5

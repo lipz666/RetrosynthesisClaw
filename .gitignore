@@ -1,0 +1,99 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+env/
+ENV/
+*.env
+
+# IDEs and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Build files
+build/
+dist/
+*.egg-info/
+
+# Logs
+logs/
+*.log
+
+# Large files
+*.pth
+*.joblib
+*.bin
+*.safetensors
+
+# Temporary files
+*.tmp
+*.temp
+
+# Configuration files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Documentation build
+docs/_build/
+
+# Test coverage
+.coverage
+.coverage.*
+
+# Jupyter notebooks
+.ipynb_checkpoints/
+
+# Docker
+Dockerfile
+.dockerignore
+
+# CI/CD
+.github/
+.travis.yml
+.gitlab-ci.yml
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+ehthumbs_vista.db
+
+# Linux
+*~
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Model files
+/smiles/ChemBERTa-2/
+/smiles/smiles/runs/
+/public/Yieldpredict/models/

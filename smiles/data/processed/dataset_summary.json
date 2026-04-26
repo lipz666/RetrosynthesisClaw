@@ -1,0 +1,30 @@
+{
+  "source_rows": 78201,
+  "source_examples": 156402,
+  "valid_examples": 156402,
+  "invalid_examples": 0,
+  "reactant_examples": 78201,
+  "product_examples": 78201,
+  "train_examples": 153274,
+  "val_examples": 3128,
+  "val_ratio": 0.02,
+  "seed": 42,
+  "input": "C:\\Users\\lpz\\Desktop\\RetrosynthesisClaw\\smiles\\data\\raw\\USPTO500MT_train.csv",
+  "output_dir": "C:\\Users\\lpz\\Desktop\\RetrosynthesisClaw\\smiles\\data\\processed",
+  "columns": {
+    "input_smiles": "noisy SMILES produced by synthetic corruption",
+    "target_smiles": "canonical RDKit SMILES used as gold target",
+    "source_column": "reactants or products"
+  },
+  "noise_strategy": {
+    "description": "character-level corruption plus light text-noise wrappers",
+    "operations": [
+      "delete",
+      "insert",
+      "substitute",
+      "swap",
+      "wrap_noise",
+      "dot_noise"
+    ]
+  }
+}

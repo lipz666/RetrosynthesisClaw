@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Monitor // RetrosynthesisClaw</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script>
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+    <style>
+        .agent-status-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1rem; }
+        @media (max-width: 1200px) { .agent-status-grid { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 768px) { .agent-status-grid { grid-template-columns: repeat(2, 1fr); } }
+        .status-node, .route-progress-card, .metric-card, .connection-indicator, .log-panel, .thinking-panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+        }
+        .status-node { padding: 1rem; transition: all var(--transition); position: relative; overflow: hidden; }
+        .status-node.active { border-color: var(--blue-mid); box-shadow: var(--shadow-md); }
+        .status-node.completed { border-color: #bbf7d0; }
+        .status-node.waiting { opacity: 0.55; }
+        .status-label, .status-value, .log-type, .thinking-step, .metric-label { text-transform: uppercase; letter-spacing: 0.08em; }
+        .status-label { font-size: 0.68rem; color: var(--text-muted); margin-bottom: 0.35rem; }
+        .status-value { font-size: 0.85rem; font-weight: 700; color: var(--text-primary); }
+        .status-icon { font-size: 1.25rem; margin-bottom: 0.5rem; color: var(--blue-mid); }
+        .status-node.active .status-icon { color: var(--blue); }
+        .log-panel, .thinking-panel { max-height: 400px; overflow-y: auto; }
+        .log-entry, .thinking-entry { padding: 0.9rem 1rem; border-bottom: 1px solid var(--border); }
+        .log-entry:hover { background: var(--surface-2); }
+        .log-entry.new { background: var(--blue-light); }
+        .log-timestamp, .thinking-time { color: var(--text-muted); font-size: 0.72rem; font-family: var(--font-mono); }
+        .log-type { font-size: 0.64rem; font-weight: 700; min-width: 72px; padding: 0.18rem 0.45rem; border-radius: 99px; text-align: center; }
+        .log-type.state { background: var(--blue-light); color: var(--blue); }
+        .log-type.info { background: var(--green-light); color: var(--green); }
+        .log-type.route { background: #f3e8ff; color: #9333ea; }
+        .log-type.error { background: var(--red-light); color: var(--red); }
+        .log-type.think { background: var(--amber-light); color: var(--amber); }
+        .log-message { color: var(--text-secondary); word-break: break-word; }
+        .route-progress-card { padding: 1rem; transition: all var(--transition); }
+        .route-progress-card.active { border-color: var(--blue-mid); box-shadow: 0 0 0 3px rgba(59,130,246,.08), var(--shadow-sm); }
+        .route-progress-card.completed { border-color: #bbf7d0; }
+        .thinking-step, .metric-label { font-size: 0.7rem; color: var(--text-muted); }
+        .thinking-content { font-size: 0.86rem; color: var(--text-secondary); line-height: 1.7; white-space: pre-wrap; }
+        .metric-card { padding: 1rem; text-align: center; }
+        .metric-value { font-size: 1.8rem; font-weight: 700; color: var(--blue); line-height: 1; }
+        .metric-label { margin-top: 0.3rem; }
+        .connection-indicator { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.45rem 0.75rem; }
+        .connection-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted); }
+        .connection-dot.connected { background: var(--green); box-shadow: 0 0 0 3px var(--green-light); }
+        .connection-dot.disconnected { background: var(--red); box-shadow: 0 0 0 3px var(--red-light); }
+        .connection-dot.connecting { background: var(--amber); }
+        .target-input-group { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+        .target-input-group input { min-width: 0; }
+        .target-input-group #targetInput { flex: 1 1 420px; }
+        .target-input-group #topKInput { width: 92px; }
+        .target-input-group input { padding: 0.8rem 1rem; background: var(--surface); border: 1px solid var(--border-2); color: var(--text-primary); border-radius: var(--radius); outline: none; transition: all var(--transition); }
+        .target-input-group input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(59,130,246,.12); }
+        .target-input-group input::placeholder { color: var(--text-muted); }
+    </style>
+</head>
+<body>
+    <nav class="nav-bar">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between gap-4">
+                <div class="nav-brand">
+                    <div class="nav-logo">
+                        <i class="fa fa-server"></i>
+                    </div>
+                    <div>
+                        <h1 class="nav-title">Agent Monitor</h1>
+                        <p class="nav-subtitle">RetrosynthesisClaw // Multi-Agent System</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3 flex-wrap justify-end">
+                    <div id="connectionStatus" class="connection-indicator">
+                        <div class="connection-dot disconnected"></div>
+                        <span class="text-xs font-mono">DISCONNECTED</span>
+                    </div>
+                    <a href="index.html" class="btn-ghost text-xs">
+                        <i class="fa fa-arrow-left mr-1"></i>workbench
+                    </a>
+                    <button id="themeToggle" class="btn-ghost w-9 h-9" aria-label="toggle theme">
+                        <i class="fa fa-moon-o dark:hidden"></i>
+                        <i class="fa fa-sun-o hidden dark:block"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-6 py-8">
+        <div class="section-header mb-6">
+            <h2 class="section-title">Agent Orchestration Monitor</h2>
+            <p class="section-subtitle">实时监控多Agent系统的工作状态、思维过程与通信机制</p>
+        </div>
+
+        <section class="mb-6">
+            <div class="hero-panel">
+                <div class="grid gap-6 xl:grid-cols-[1fr_auto] items-end">
+                    <div>
+                        <div class="hero-kicker">real-time // multi-agent // orchestration</div>
+                        <h2 class="hero-title" style="font-size: 1.5rem; margin: 0.5rem 0;">Orchestration Pipeline</h2>
+                        <div class="target-input-group">
+                            <input type="text" id="targetInput" placeholder="输入分子 SMILES (如: BrC1=C2CCCOC2=NC=C1)" />
+                            <input type="number" id="topKInput" value="3" min="1" max="5" style="width: 70px; padding: 0.75rem; background: rgba(18,18,26,0.95); border: 1px solid rgba(0,255,136,0.3); color: var(--foreground); font-family: var(--font-body); text-align: center;" />
+                            <button id="startBtn" class="btn-primary">
+                                <i class="fa fa-play mr-1"></i>启动监控
+                            </button>
+                            <button id="stopBtn" class="btn-secondary" disabled>
+                                <i class="fa fa-stop mr-1"></i>停止
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 flex-wrap">
+                        <div class="metric-card">
+                            <div class="metric-value" id="totalRoutes">0</div>
+                            <div class="metric-label">总路线数</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value" id="completedRoutes">0</div>
+                            <div class="metric-label">已完成</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value" id="activeRoutes">0</div>
+                            <div class="metric-label">进行中</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value" id="totalTime">0s</div>
+                            <div class="metric-label">总耗时</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="mb-6">
+            <h3 class="text-sm font-semibold text-accent mb-3 font-heading uppercase tracking-wider" style="font-family: var(--font-heading);">
+                <i class="fa fa-project-diagram mr-2"></i>Orchestration States
+            </h3>
+            <div class="agent-status-grid" id="statusGrid">
+                <div class="status-node" id="state-INIT" style="--node-color: #888888; --node-color-rgb: 136,136,136;">
+                    <div class="status-icon"><i class="fa fa-power-off"></i></div>
+                    <div class="status-label">初始化</div>
+                    <div class="status-value">INIT</div>
+                </div>
+                <div class="status-node" id="state-PARSE" style="--node-color: #00d4ff; --node-color-rgb: 0,212,255;">
+                    <div class="status-icon"><i class="fa fa-search"></i></div>
+                    <div class="status-label">分子解析</div>
+                    <div class="status-value">PARSE</div>
+                </div>
+                <div class="status-node" id="state-GENERATE" style="--node-color: #ff00ff; --node-color-rgb: 255,0,255;">
+                    <div class="status-icon"><i class="fa fa-magic"></i></div>
+                    <div class="status-label">路线生成</div>
+                    <div class="status-value">GENERATE</div>
+                </div>
+                <div class="status-node" id="state-EVALUATE" style="--node-color: #ffa500; --node-color-rgb: 255,165,0;">
+                    <div class="status-icon"><i class="fa fa-check-circle"></i></div>
+                    <div class="status-label">路线评估</div>
+                    <div class="status-value">EVALUATE</div>
+                </div>
+                <div class="status-node" id="state-PLAN" style="--node-color: #00ff88; --node-color-rgb: 0,255,136;">
+                    <div class="status-icon"><i class="fa fa-clipboard-list"></i></div>
+                    <div class="status-label">路线规划</div>
+                    <div class="status-value">PLAN</div>
+                </div>
+                <div class="status-node" id="state-DONE" style="--node-color: #00ff88; --node-color-rgb: 0,255,136;">
+                    <div class="status-icon"><i class="fa fa-flag-checkered"></i></div>
+                    <div class="status-label">完成</div>
+                    <div class="status-value">DONE</div>
+                </div>
+            </div>
+        </section>
+
+        <div class="grid gap-6 xl:grid-cols-2" style="grid-template-columns: 1fr 1fr;">
+            <section class="mb-6">
+                <h3 class="text-sm font-semibold text-accent mb-3 font-heading uppercase tracking-wider" style="font-family: var(--font-heading);">
+                    <i class="fa fa-terminal mr-2"></i>实时日志
+                </h3>
+                <div class="log-panel" id="logPanel">
+                    <div class="log-entry" style="justify-content: center; color: var(--muted-foreground);">
+                        <span>等待启动监控...</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="mb-6">
+                <h3 class="text-sm font-semibold mb-3 font-heading uppercase tracking-wider" style="font-family: var(--font-heading); color: #ffa500;">
+                    <i class="fa fa-brain mr-2"></i>Agent 思维链
+                </h3>
+                <div class="thinking-panel" id="thinkingPanel">
+                    <div class="thinking-entry" style="justify-content: center; color: var(--muted-foreground); display: flex; align-items: center; height: 150px;">
+                        <span>等待 Agent 思维过程...</span>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <section class="mb-6">
+            <h3 class="text-sm font-semibold text-accent mb-3 font-heading uppercase tracking-wider" style="font-family: var(--font-heading);">
+                <i class="fa fa-route mr-2"></i>多路线并行进度
+            </h3>
+            <div class="grid gap-4" id="routesContainer" style="grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));">
+                <div class="route-progress-card" style="padding: 1.5rem; text-align: center; color: var(--muted-foreground);">
+                    <i class="fa fa-route" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
+                    <p style="margin: 0;">暂无路线数据</p>
+                    <p style="margin: 0.5rem 0 0; font-size: 0.75rem;">启动监控后将显示路线生成进度</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="mb-6">
+            <h3 class="text-sm font-semibold text-accent mb-3 font-heading uppercase tracking-wider" style="font-family: var(--font-heading);">
+                <i class="fa fa-history mr-2"></i>历史记录
+            </h3>
+            <div id="historyPanel" class="log-panel" style="max-height: 200px;">
+                <div class="log-entry" style="justify-content: center; color: var(--muted-foreground);">
+                    <span>暂无历史记录</span>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="max-w-7xl mx-auto px-6">
+            <p class="footer-text">© 2026 RetrosynthesisClaw · Agent Orchestration Monitor</p>
+        </div>
+    </footer>
+
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8000';
+        const ORCHESTRATION_STATES = ['INIT', 'PARSE', 'GENERATE', 'EVALUATE', 'PLAN', 'DONE'];
+        
+        let eventSource = null;
+        let startTime = null;
+        let currentRoutes = [];
+        let routeStates = {};
+        let thinkingHistory = [];
+        let isStreaming = false;
+
+        const targetInput = document.getElementById('targetInput');
+        const topKInput = document.getElementById('topKInput');
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const logPanel = document.getElementById('logPanel');
+        const thinkingPanel = document.getElementById('thinkingPanel');
+        const routesContainer = document.getElementById('routesContainer');
+        const historyPanel = document.getElementById('historyPanel');
+        const connectionStatus = document.getElementById('connectionStatus');
+
+        document.getElementById('themeToggle')?.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+            localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+        });
+
+        startBtn?.addEventListener('click', startMonitoring);
+        stopBtn?.addEventListener('click', stopMonitoring);
+
+        function updateConnectionStatus(status, text) {
+            const dot = connectionStatus.querySelector('.connection-dot');
+            const span = connectionStatus.querySelector('span');
+            if (dot) {
+                dot.className = 'connection-dot ' + status;
+            }
+            if (span) {
+                span.textContent = text;
+            }
+        }
+
+        function addLog(type, message) {
+            const timestamp = new Date().toLocaleTimeString('zh-CN', { hour12: false });
+            const entry = document.createElement('div');
+            entry.className = 'log-entry new';
+            entry.innerHTML = `
+                <span class="log-timestamp">${timestamp}</span>
+                <span class="log-type ${type}">${getLogTypeLabel(type)}</span>
+                <span class="log-message">${escapeHtml(message)}</span>
+            `;
+            logPanel.appendChild(entry);
+            logPanel.scrollTop = logPanel.scrollHeight;
+            setTimeout(() => entry.classList.remove('new'), 500);
+        }
+
+        function getLogTypeLabel(type) {
+            const labels = {
+                state: '状态',
+                info: '信息',
+                route: '路线',
+                error: '错误',
+                think: '思维'
+            };
+            return labels[type] || type;
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function updateStatus(state) {
+            ORCHESTRATION_STATES.forEach(s => {
+                const el = document.getElementById('state-' + s);
+                if (!el) return;
+                el.classList.remove('active', 'completed', 'waiting');
+                if (s === state) {
+                    el.classList.add('active');
+                } else if (ORCHESTRATION_STATES.indexOf(s) < ORCHESTRATION_STATES.indexOf(state)) {
+                    el.classList.add('completed');
+                } else {
+                    el.classList.add('waiting');
+                }
+            });
+        }
+
+        function addThinking(routeIndex, stepIndex, reasoning) {
+            const time = new Date().toLocaleTimeString('zh-CN', { hour12: false });
+            thinkingHistory.push({ routeIndex, stepIndex, reasoning, time });
+
+            const existing = thinkingPanel.querySelector('.log-entry[style*="justify-content: center"]');
+            if (existing) existing.remove();
+
+            const entry = document.createElement('div');
+            entry.className = 'thinking-entry';
+            entry.innerHTML = `
+                <div class="thinking-header">
+                    <span class="thinking-step">路线 ${routeIndex} / 步骤 ${stepIndex}</span>
+                    <span class="thinking-time">${time}</span>
+                </div>
+                <div class="thinking-content">${escapeHtml(reasoning)}</div>
+            `;
+            thinkingPanel.appendChild(entry);
+            thinkingPanel.scrollTop = thinkingPanel.scrollHeight;
+        }
+
+        function addConversationEntry(routeIndex, stepIndex, role, content) {
+            const time = new Date().toLocaleTimeString('zh-CN', { hour12: false });
+            const roleLabels = {
+                'system': '系统',
+                'user': '用户',
+                'assistant': '助手',
+                'reasoning': '推理'
+            };
+            const roleColors = {
+                'system': '#ff00ff',
+                'user': '#00d4ff',
+                'assistant': '#00ff88',
+                'reasoning': '#ffa500'
+            };
+
+            const entry = document.createElement('div');
+            entry.className = 'conversation-entry';
+            entry.innerHTML = `
+                <div class="conversation-header" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                    <span class="conversation-role" style="font-family: var(--font-label); font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: ${roleColors[role] || '#888'};">${roleLabels[role] || role}</span>
+                    <span class="conversation-meta" style="font-size: 0.6rem; color: var(--muted-foreground);">路线${routeIndex} / 步骤${stepIndex} / ${time}</span>
+                </div>
+                <div class="conversation-content" style="font-size: 0.75rem; color: var(--foreground); line-height: 1.5; white-space: pre-wrap; word-break: break-word; max-height: 300px; overflow-y: auto; padding: 0.5rem; background: rgba(0,0,0,0.3); border-left: 2px solid ${roleColors[role] || '#888'}; margin-top: 0.25rem;">${escapeHtml(content)}</div>
+            `;
+            thinkingPanel.appendChild(entry);
+            thinkingPanel.scrollTop = thinkingPanel.scrollHeight;
+        }
+
+        function updateRouteCard(routeIndex, state, message, steps) {
+            let card = document.getElementById('route-card-' + routeIndex);
+            if (!card) {
+                card = document.createElement('div');
+                card.id = 'route-card-' + routeIndex;
+                card.className = 'route-progress-card';
+                card.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                        <span style="font-family: var(--font-heading); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.1em;">
+                            <i class="fa fa-route mr-1"></i>路线 ${routeIndex}
+                        </span>
+                        <span class="route-status" style="font-size: 0.7rem; padding: 0.2rem 0.5rem; background: rgba(255,165,0,0.2); color: #ffa500; font-family: var(--font-label);">WAITING</span>
+                    </div>
+                    <div class="route-progress" style="height: 4px; background: rgba(255,255,255,0.1); margin-bottom: 0.75rem; border-radius: 2px;">
+                        <div class="route-progress-bar" style="height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), var(--accent-tertiary)); transition: width 0.3s;"></div>
+                    </div>
+                    <div class="route-message" style="font-size: 0.8rem; color: var(--muted-foreground);">等待生成...</div>
+                    <div class="route-steps" style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--accent-tertiary);"></div>
+                `;
+                routesContainer.appendChild(card);
+            }
+
+            card.classList.remove('active', 'completed');
+            if (state === 'active') card.classList.add('active');
+            if (state === 'completed') card.classList.add('completed');
+
+            const statusEl = card.querySelector('.route-status');
+            const progressBar = card.querySelector('.route-progress-bar');
+            const messageEl = card.querySelector('.route-message');
+            const stepsEl = card.querySelector('.route-steps');
+
+            if (statusEl) {
+                const stateLabels = {
+                    waiting: { text: 'WAITING', color: '#ffa500', bg: 'rgba(255,165,0,0.2)' },
+                    active: { text: 'ACTIVE', color: '#ff00ff', bg: 'rgba(255,0,255,0.2)' },
+                    completed: { text: 'DONE', color: '#00ff88', bg: 'rgba(0,255,136,0.2)' },
+                    error: { text: 'ERROR', color: '#ff3366', bg: 'rgba(255,51,102,0.2)' }
+                };
+                const s = stateLabels[state] || stateLabels.waiting;
+                statusEl.textContent = s.text;
+                statusEl.style.color = s.color;
+                statusEl.style.background = s.bg;
+            }
+
+            if (progressBar) {
+                const progressMap = { waiting: 0, active: 50, completed: 100, error: 100 };
+                progressBar.style.width = (progressMap[state] || 0) + '%';
+            }
+
+            if (messageEl) messageEl.textContent = message;
+            if (stepsEl && steps) stepsEl.textContent = steps;
+
+            updateMetrics();
+        }
+
+        function updateMetrics() {
+            const total = currentRoutes.length;
+            const completed = currentRoutes.filter(r => r._state === 'completed').length;
+            const active = currentRoutes.filter(r => r._state === 'active').length;
+            
+            document.getElementById('totalRoutes').textContent = total;
+            document.getElementById('completedRoutes').textContent = completed;
+            document.getElementById('activeRoutes').textContent = active;
+
+            if (startTime) {
+                const elapsed = Math.round((Date.now() - startTime) / 1000);
+                document.getElementById('totalTime').textContent = elapsed + 's';
+            }
+        }
+
+        function addToHistory(message) {
+            const timestamp = new Date().toLocaleTimeString('zh-CN', { hour12: false });
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.innerHTML = `<span class="log-timestamp">${timestamp}</span><span class="log-message">${escapeHtml(message)}</span>`;
+            
+            const placeholder = historyPanel.querySelector('.log-entry[style*="justify-content: center"]');
+            if (placeholder) placeholder.remove();
+            
+            historyPanel.appendChild(entry);
+            historyPanel.scrollTop = historyPanel.scrollHeight;
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerHTML = `<div class="toast-icon ${type}"><i class="fa ${type === 'success' ? 'fa-check' : 'fa-exclamation-circle'} text-xs"></i></div><span class="toast-message">${escapeHtml(message)}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.classList.add('removing'); setTimeout(() => toast.remove(), 300); }, 3000);
+        }
+
+        async function startMonitoring() {
+            const target = targetInput?.value?.trim();
+            if (!target) {
+                showToast('请输入目标分子', 'error');
+                return;
+            }
+            const top_k = parseInt(topKInput?.value || '3', 10);
+
+            stopMonitoring();
+            
+            logPanel.innerHTML = '';
+            thinkingPanel.innerHTML = '';
+            routesContainer.innerHTML = '';
+            currentRoutes = [];
+            thinkingHistory = [];
+            startTime = Date.now();
+
+            addLog('info', `开始监控: ${target}`);
+            addLog('info', `请求路线数: ${top_k}`);
+
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+            isStreaming = true;
+            updateConnectionStatus('connecting', 'CONNECTING');
+
+            try {
+                eventSource = new EventSource(`${API_BASE_URL}/route/stream`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ target, top_k, debug: true })
+                });
+
+                const response = await fetch(`${API_BASE_URL}/route/stream`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ target, top_k, debug: true })
+                });
+
+                if (!response.ok || !response.body) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                updateConnectionStatus('connected', 'CONNECTED');
+                addLog('info', 'SSE 连接已建立');
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder('utf-8');
+                let buffer = '';
+
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+
+                    buffer += decoder.decode(value, { stream: true });
+                    let splitIndex;
+                    while ((splitIndex = buffer.indexOf('\n\n')) >= 0) {
+                        const chunk = buffer.slice(0, splitIndex).trim();
+                        buffer = buffer.slice(splitIndex + 2);
+                        if (!chunk.startsWith('data: ')) continue;
+                        const payloadText = chunk.slice(6).trim();
+                        if (!payloadText) continue;
+                        try {
+                            const event = JSON.parse(payloadText);
+                            handleEvent(event);
+                        } catch (e) {
+                            console.warn('解析事件失败:', e);
+                        }
+                    }
+                }
+            } catch (error) {
+                addLog('error', `连接失败: ${error.message}`);
+                updateConnectionStatus('disconnected', 'DISCONNECTED');
+                stopMonitoring();
+            }
+        }
+
+        function handleEvent(event) {
+            if (!event?.type) return;
+
+            switch (event.type) {
+                case 'progress':
+                    if (event.state) {
+                        updateStatus(event.state);
+                        addLog('state', event.message || `状态: ${event.state}`);
+                    }
+                    if (event.route_index) {
+                        updateRouteCard(event.route_index, 'active', event.message || '生成中...', event.steps ? `已生成 ${event.steps.length} 步` : '');
+                        if (!currentRoutes.find(r => r._route_index === event.route_index)) {
+                            currentRoutes.push({ _route_index: event.route_index, _state: 'active' });
+                        }
+                        if (event.steps) {
+                            event.steps.forEach((step, i) => {
+                                if (step.metadata?.model_response) {
+                                    const modelResp = step.metadata.model_response;
+                                    if (modelResp.raw_response?.choices?.[0]?.message?.content) {
+                                        const content = modelResp.raw_response.choices[0].message.content;
+                                        if (typeof content === 'string') {
+                                            try {
+                                                const parsed = JSON.parse(content);
+                                                if (parsed.reasoning) {
+                                                    addConversationEntry(event.route_index, i + 1, 'reasoning', parsed.reasoning);
+                                                }
+                                                if (parsed.route) {
+                                                    const routeInfo = JSON.stringify(parsed.route, null, 2);
+                                                    addConversationEntry(event.route_index, i + 1, 'assistant', routeInfo);
+                                                }
+                                            } catch (e) {
+                                                addConversationEntry(event.route_index, i + 1, 'assistant', content);
+                                            }
+                                        }
+                                    }
+                                }
+                                const reasoning = step.metadata?.reasoning || step.rationale || '';
+                                if (reasoning) {
+                                    addThinking(event.route_index, i + 1, reasoning);
+                                }
+                            });
+                        }
+                    }
+                    break;
+
+                case 'target':
+                    addLog('info', `目标分子已解析: ${event.target?.canonical_smiles || event.target?.smiles || 'N/A'}`);
+                    break;
+
+                case 'route':
+                    if (event.route) {
+                        const idx = event.route_index || 1;
+                        const route = event.route;
+                        route._route_index = idx;
+                        route._state = 'completed';
+
+                        const existing = currentRoutes.findIndex(r => r._route_index === idx);
+                        if (existing >= 0) currentRoutes[existing] = route;
+                        else currentRoutes.push(route);
+
+                        updateRouteCard(idx, 'completed', '路线生成完成', route.steps ? `${route.steps.length} 步` : '');
+                        addLog('route', `路线 ${idx} 已完成 - 评分: ${route.total_score || 0}`);
+
+                        if (route.steps) {
+                            route.steps.forEach((step, i) => {
+                                const reasoning = step.metadata?.reasoning || step.rationale || '';
+                                if (reasoning) {
+                                    addThinking(idx, i + 1, reasoning);
+                                } else {
+                                    addThinking(idx, i + 1, step.rationale || '无推理过程');
+                                }
+                            });
+                        }
+                    }
+                    break;
+
+                case 'complete':
+                    updateStatus('DONE');
+                    addLog('info', '所有路线生成完成');
+                    updateConnectionStatus('connected', 'COMPLETED');
+                    addToHistory(`[完成] ${targetInput?.value} - ${currentRoutes.length} 条路线`);
+                    showToast('监控任务完成', 'success');
+                    stopMonitoring();
+                    break;
+
+                case 'error':
+                    addLog('error', event.error || '未知错误');
+                    updateConnectionStatus('disconnected', 'ERROR');
+                    break;
+            }
+        }
+
+        function stopMonitoring() {
+            if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+            }
+            isStreaming = false;
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+            
+            if (startTime) {
+                const elapsed = Math.round((Date.now() - startTime) / 1000);
+                addLog('info', `监控已停止 (运行时长: ${elapsed}s)`);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateConnectionStatus('disconnected', 'DISCONNECTED');
+            ORCHESTRATION_STATES.forEach(s => {
+                const el = document.getElementById('state-' + s);
+                if (el) el.classList.add('waiting');
+            });
+        });
+    </script>
+</body>
+</html>
