@@ -8,9 +8,9 @@ authors = [
 ]
 license = { file = "LICENSE" }
 readme = "README.md"
-homepage = "https://github.com/yourusername/RetrosynthesisClaw"
-repository = "https://github.com/yourusername/RetrosynthesisClaw"
-documentation = "https://github.com/yourusername/RetrosynthesisClaw/wiki"
+homepage = "https://github.com/lipz666/RetrosynthesisClaw"
+repository = "https://github.com/lipz666/RetrosynthesisClaw"
+documentation = "https://github.com/lipz666/RetrosynthesisClaw/wiki"
 keywords = ["retrosynthesis", "organic chemistry", "llm", "multi-agent", "synthesis planning"]
 dependencies = [
   "fastapi>=0.115.0",
