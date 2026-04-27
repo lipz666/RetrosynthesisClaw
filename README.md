@@ -10,7 +10,7 @@ If you are using an AI coding tool such as Claude Code, Codex, Cursor, Trae, or 
 You are an AI coding agent working inside the RetrosynthesisClaw repository at https://github.com/lipz666/RetrosynthesisClaw.
 
 Your mission is to complete the full setup flow for this project end to end:
-- clone or inspect the repository
+- clone or inspect the repository from https://github.com/lipz666/RetrosynthesisClaw
 - install dependencies
 - configure environment variables
 - verify the project starts successfully
@@ -194,6 +194,34 @@ MODEL_API_KEY=your_api_key_here
 - **`.env`**: Environment variable configuration, including API keys
 - **`configs/default.yaml`**: System default configuration
 - **`configs/api_config.json`**: API-related configuration
+
+### Configure `.env`
+
+1. Copy the example file:
+
+```bash
+cp .env.example .env
+```
+
+On Windows PowerShell:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+2. Open `.env` and set your model provider settings:
+
+```bash
+MODEL_PROVIDER=http
+MODEL_API_BASE_URL=https://api.deepseek.com
+MODEL_API_PATH=/v1/chat/completions
+MODEL_API_NAME=deepseek-chat
+MODEL_API_KEY=your_api_key_here
+```
+
+3. If you are using Ollama or another local model server, set `MODEL_PROVIDER=ollama` and leave `MODEL_API_KEY` empty.
+
+4. Never commit real secrets. Keep `.env` local only; if you need to share a sample, use `.env.example`.
 
 ### Configuration Options
 
