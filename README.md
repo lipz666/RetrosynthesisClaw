@@ -2,6 +2,31 @@
 
 A modular multi-agent retrosynthesis scaffold for complex organic synthesis planning, powered by large language models.
 
+## Quick Start for AI Coding Tools
+
+If you are using an AI coding tool such as Claude Code, Codex, Cursor, Trae, or OpenClaw, you can paste the prompt below to install and configure this project automatically.
+
+```text
+You are working in the RetrosynthesisClaw repository.
+
+Goal: get this project installed and runnable with the least friction for the user.
+
+Please perform the following steps in order:
+1. Inspect the repository files that affect installation and startup, especially `pyproject.toml`, `environment.yml`, `.env.example`, and `README.md`.
+2. Fix any installation or packaging issues that would block a clean install, including dependency declarations, build metadata, and environment configuration.
+3. Make the project easier to set up on both Windows and macOS/Linux. Prefer cross-platform commands such as `python -m pip` over plain `pip` when appropriate.
+4. Update `.env.example` and the README so a new user can quickly configure the model provider, API base URL, model name, and API key.
+5. If required dependencies are missing from the project metadata, add them to the appropriate dependency list instead of asking the user to install them manually.
+6. Keep changes minimal and safe, and preserve the existing project structure.
+7. After editing, check for linter or packaging issues and fix anything introduced by the change.
+8. Summarize the changes you made and the exact commands a user should run to install and start the project.
+
+Context:
+- This is a retrosynthesis / synthesis-planning agent project.
+- The project should remain usable as an open-source demo for AI coding tools.
+- The user wants the fastest path to installation and first run.
+```
+
 ## Project Overview
 
 RetrosynthesisClaw is an intelligent molecular synthesis planning system that integrates advanced large language models (LLMs) with chemical knowledge to provide automated synthesis route design services for organic chemists. The system adopts a multi-agent architecture, capable of generating high-quality synthesis routes and providing detailed synthetic strategy analysis.
@@ -104,15 +129,21 @@ conda env create -f environment.yml
 conda activate retrosyn_test
 ```
 
-3. **Install the project**
+3. **Upgrade packaging tools**
 
 ```bash
-pip install -e .
+python -m pip install --upgrade pip setuptools wheel
 ```
 
-4. **Configure API key**
+4. **Install the project**
 
-Copy the `.env.example` file and rename it to `.env`, then fill in your API key:
+```bash
+python -m pip install -e .
+```
+
+5. **Configure API key**
+
+Copy the `.env.example` file and rename it to `.env`, then fill in your API settings. If you are using a local Ollama server, leave `MODEL_API_KEY` empty.
 
 ```
 # .env file content
@@ -128,15 +159,21 @@ git clone https://github.com/lipz666/RetrosynthesisClaw.git
 cd RetrosynthesisClaw
 ```
 
-2. **Install dependencies**
+2. **Upgrade packaging tools**
 
 ```bash
-pip install -e .
+python -m pip install --upgrade pip setuptools wheel
 ```
 
-3. **Configure API key**
+3. **Install dependencies**
 
-Copy the `.env.example` file and rename it to `.env`, then fill in your API key:
+```bash
+python -m pip install -e .
+```
+
+4. **Configure API key**
+
+Copy the `.env.example` file and rename it to `.env`, then fill in your API settings. If you are using a local Ollama server, leave `MODEL_API_KEY` empty.
 
 ```
 # .env file content
@@ -167,14 +204,10 @@ MODEL_API_KEY=your_api_key_here
 1. **Start the backend service**
 
 ```bash
-# Windows
 python -m uvicorn retrosynthesis_claw.api:app --host 0.0.0.0 --port 8000 --reload
-
-# Mac/Linux
-python3 -m uvicorn retrosynthesis_claw.api:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-2. **Access the frontend interface**
+2. **Open the frontend interface**
 
 Open your browser and visit `http://localhost:8000`
 

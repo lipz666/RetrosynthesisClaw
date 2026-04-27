@@ -8,10 +8,8 @@ authors = [
 ]
 license = { file = "LICENSE" }
 readme = "README.md"
-homepage = "https://github.com/lipz666/RetrosynthesisClaw"
-repository = "https://github.com/lipz666/RetrosynthesisClaw"
-documentation = "https://github.com/lipz666/RetrosynthesisClaw/wiki"
 keywords = ["retrosynthesis", "organic chemistry", "llm", "multi-agent", "synthesis planning"]
+urls = { homepage = "https://github.com/lipz666/RetrosynthesisClaw", repository = "https://github.com/lipz666/RetrosynthesisClaw", documentation = "https://github.com/lipz666/RetrosynthesisClaw/wiki" }
 dependencies = [
   "fastapi>=0.115.0",
   "uvicorn>=0.30.0",
@@ -24,6 +22,9 @@ dependencies = [
   "python-dotenv>=1.0.0",
   "pydantic>=2.0.0",
   "pydantic-settings>=2.0.0",
+  "joblib>=1.0",
+  "scikit-learn>=1.0",
+  "scipy>=1.10",
 ]
 
 [tool.setuptools]
@@ -36,5 +37,5 @@ where = ["src"]
 retrosynthesis-claw = "retrosynthesis_claw.api:app"
 
 [build-system]
-requires = ["setuptools>=42", "wheel"]
+requires = ["setuptools>=65.0", "wheel"]
 build-backend = "setuptools.build_meta"
