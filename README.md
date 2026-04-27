@@ -7,24 +7,31 @@ A modular multi-agent retrosynthesis scaffold for complex organic synthesis plan
 If you are using an AI coding tool such as Claude Code, Codex, Cursor, Trae, or OpenClaw, you can paste the prompt below to install and configure this project automatically.
 
 ```text
-You are working in the RetrosynthesisClaw repository.
+You are an AI coding agent working inside the RetrosynthesisClaw repository at https://github.com/lipz666/RetrosynthesisClaw.
 
-Goal: get this project installed and runnable with the least friction for the user.
+Your mission is to complete the full setup flow for this project end to end:
+- clone or inspect the repository
+- install dependencies
+- configure environment variables
+- verify the project starts successfully
+- fix any installation issues you encounter
 
-Please perform the following steps in order:
-1. Inspect the repository files that affect installation and startup, especially `pyproject.toml`, `environment.yml`, `.env.example`, and `README.md`.
-2. Fix any installation or packaging issues that would block a clean install, including dependency declarations, build metadata, and environment configuration.
-3. Make the project easier to set up on both Windows and macOS/Linux. Prefer cross-platform commands such as `python -m pip` over plain `pip` when appropriate.
-4. Update `.env.example` and the README so a new user can quickly configure the model provider, API base URL, model name, and API key.
-5. If required dependencies are missing from the project metadata, add them to the appropriate dependency list instead of asking the user to install them manually.
-6. Keep changes minimal and safe, and preserve the existing project structure.
-7. After editing, check for linter or packaging issues and fix anything introduced by the change.
-8. Summarize the changes you made and the exact commands a user should run to install and start the project.
+Follow this workflow exactly:
+1. First inspect the repository files that control installation and startup, especially `pyproject.toml`, `environment.yml`, `.env.example`, `README.md`, and the backend entry points.
+2. Identify anything that would block a fresh user from going from a clean checkout to a working local run.
+3. Fix packaging metadata, missing dependencies, environment examples, startup instructions, and any cross-platform issues that affect Windows, macOS, or Linux.
+4. Prefer the most reliable commands for first-time users, especially `python -m pip` instead of plain `pip` when installing or upgrading Python packages.
+5. If the project needs additional dependencies, add them to the proper project metadata rather than telling the user to install them manually.
+6. Update `.env.example` and the README so a new user can understand how to choose a model provider, set the base URL, set the model name, and provide an API key.
+7. If the repository contains scripts, tests, or launch commands, use them to verify the project is actually runnable after your changes.
+8. After the setup is fixed, provide the exact commands a user should run from a fresh machine to install, configure, and start the project.
 
-Context:
-- This is a retrosynthesis / synthesis-planning agent project.
-- The project should remain usable as an open-source demo for AI coding tools.
-- The user wants the fastest path to installation and first run.
+Important constraints:
+- Keep changes minimal, safe, and consistent with the existing project structure.
+- Do not ask the user to manually figure out missing dependencies if the repository can declare them.
+- Treat this as an installation and first-run rescue task, not a code redesign task.
+- The project should remain usable as an open-source demo for AI coding tools such as Claude Code, Codex, Cursor, Trae, and OpenClaw.
+- Prefer direct action over explanation until the project is actually installable and runnable.
 ```
 
 ## Project Overview
